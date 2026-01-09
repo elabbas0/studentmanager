@@ -80,7 +80,7 @@ int main(void)
         return 1;
     }
 
-    char *prompts[] = {"Add user", "Delete user", "List user", "Update user", "Quit", NULL};
+    char *prompts[] = {"Add user", "Delete user", "List user", "Update user", "\nQuit", NULL};
     int selection = 0;
 
     while (1)
@@ -93,9 +93,9 @@ int main(void)
         }
 
         char ch = _getch();
-        if (ch == 's' && selection < size(prompts) - 1)
+        if (ch == 's' || ch == 'S' && selection < size(prompts) - 1)
             selection++;
-        else if (ch == 'w' && selection > 0)
+        else if (ch == 'w' || ch == 'W' && selection > 0)
             selection--;
         else if (ch == '\r')
             break;
