@@ -138,7 +138,6 @@ int main()
 
     printf(cls);
     if (selection == 3){
-        printf(cls);
         printf("-- List Users --\n\n");
         if (listUser() == -1){ printf("No users."); return 0;}
         return 0;
@@ -179,6 +178,7 @@ int main()
         snprintf(toWrite, sizeof(toWrite), "%s:%s:%d", name, surname, age);
         writeNew(toWrite);
     }
+
 
 
 }
