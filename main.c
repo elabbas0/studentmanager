@@ -143,6 +143,7 @@ int main()
         if (listUser() == -1){ printf("No users."); return 0;}
         return 0;
     }
+    if (selection == 4) { return 0;}
     printf(selection == 1 ? " -- %s --\n\n1. Name (Case sensitive): ":" -- %s --\n\n1. Name: ", arr[selection]);
     scanf("%255s", name);
    
