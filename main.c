@@ -1,368 +1,183 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <conio.h>
 #include <string.h>
+#define cls "\033[1;1H\033[2J" // i dont wanna keep rewriting it, escape code for ascii which clears the screen
 
-int size(char **param)
+void writeNew(const char *toWrite)
 {
-    int i = 0;
-    while (param[i] != NULL)
+    FILE *src = fopen("DATA", "r");
+    FILE *dest = fopen("DATA.tmp", "w");
+
+    char line[1024];
+
+    if (src)
     {
-        i++;
+        while (fgets(line, sizeof(line), src))
+        {
+            fputs(line, dest);
+        }
+        fclose(src);
     }
-    return i;
+
+    fprintf(dest, "%s\n", toWrite); //write to the last line
+
+    fclose(dest);
+
+    remove("DATA");
+    rename("DATA.tmp", "DATA");
 }
 
-int getLineCount()
+int findUser(char *name)
 {
-    FILE *fp = fopen("DATA", "r");
-    if (!fp)
+    FILE *src = fopen("DATA", "r");
+    int i = 0;
+    char line[1024];
+    while (fgets(line, sizeof(line), src))
+    {
+        size_t len = strcspn(line, ":"); // stops at first ':', which is the name
+        i++;
+        if (strncmp(line, name, len) == 0 && name[len] == '\0')
+        {
+            fclose(src);
+            return i; // found
+        }
+    }
+
+    fclose(src);
+    return -1; // not found
+}
+
+void deleteUser(int lineToDelete)
+{
+    FILE *src = fopen("DATA", "r");
+    FILE *dest = fopen("DATA.tmp", "w");
+    int i = 0;
+    char line[1024];
+    if (src)
+    {
+        while (fgets(line, sizeof(line), src))
+        {
+            i++;
+            if (i == lineToDelete){
+                continue;
+            }
+            fputs(line, dest);
+        }
+        fclose(src);
+    }
+
+    fclose(dest);
+    remove("DATA");
+    rename("DATA.tmp", "DATA");
+}
+
+void updateUser(int lineToUpdate, char* newLine)
+{
+    FILE *src = fopen("DATA", "r");
+    FILE *dest = fopen("DATA.tmp", "w");
+    int i = 0;
+    char line[1024];
+    if (src)
+    {
+        while (fgets(line, sizeof(line), src))
+        {
+            i++;
+            if (i == lineToUpdate){
+                fputs(newLine,dest);
+                continue;
+            }
+            fputs(line, dest);
+        }
+        fclose(src);
+    }
+
+    fclose(dest);
+    remove("DATA");
+    rename("DATA.tmp", "DATA");
+}
+
+int listUser()
+{
+    FILE *src = fopen("DATA", "r");
+    char line[1024];
+    int i = 1;
+    if (src)
+    {
+        while (fgets(line, sizeof(line), src))
+        {
+            line[strcspn(line, "\n")] = 0;
+
+            size_t len = strcspn(line, ":");
+
+            char user[256]; snprintf(user, sizeof(user), "%.*s", (int)len, line); //write only name
+            printf("%d. %s\n", i, user);
+            i++;
+        }
+        fclose(src);
+
+        if (i == 1) return -1;
+    }
+    return 0;
+}
+
+int main()
+{
+    int selection;
+    char *arr[] = {"Add User", "Delete User", "Update User", "List all", "Quit", NULL};
+
+    printf(cls); // clear screen (escape code ascii)
+    printf("Welcome to Student manager. What do you want to do?\n\n1. Add User\n2. Delete User\n3. Update User\n4. List all\n\n5. Quit\n\n>> ");
+
+    scanf("%d", &selection);
+    selection--; // because we start to count from 1 but computer counts from 0, he's dumb
+
+    char name[256];
+    char surname[256];
+    int age;
+    char toWrite[256];
+
+    printf(cls);
+    if (selection == 3){
+        printf(cls);
+        printf("-- List Users --\n\n");
+        if (listUser() == -1){ printf("No users."); return 0;}
+        return 0;
+    }
+    printf(selection == 1 ? " -- %s --\n\n1. Name (Case sensitive): ":" -- %s --\n\n1. Name: ", arr[selection]);
+    scanf("%255s", name);
+   
+    if(selection == 1){ //Delete user
+        if(findUser(name) == -1){printf("No such user found."); return 1;}
+        deleteUser(findUser(name));
+        printf("\n%s have been removed.\n",name);
+        return 0;
+    }
+
+    if(selection == 2){ //Update user
+        if(findUser(name) == -1){printf("No such user found."); return 1;}
+
+        printf(cls); printf(" -- Update User --\n\n1. Name: "); scanf("%s255",&name);
+        printf("2. Surname: "); scanf("%s255",&surname);
+        printf("3. Age: "); scanf("%d",&age);
+
+        snprintf(toWrite, sizeof(toWrite), "%s:%s:%d", name, surname, age);
+        updateUser(findUser(name),toWrite);
+        printf("\n%s have been updated.",name);
         return 0;
 
-    int lines = 0;
-    char buffer[1024];
-    while (fgets(buffer, sizeof(buffer), fp) != NULL)
-        lines++;
-    fclose(fp);
-    return lines;
-}
-
-char *lineContent(int line)
-{
-    FILE *fp = fopen("DATA", "r");
-    if (!fp)
-        return NULL;
-
-    char buffer[1024];
-    int currentLine = 0;
-    char *result = NULL;
-
-    while (fgets(buffer, sizeof(buffer), fp) != NULL)
-    {
-        currentLine++;
-        if (currentLine == line)
-        {
-            result = malloc(strlen(buffer) + 1);
-            if (result)
-                strcpy(result, buffer);
-            break;
-        }
     }
 
-    fclose(fp);
-    return result;
-}
+    printf("2. Surname: ");
+    scanf("%255s", surname);
+    printf("3. Age: ");
+    scanf("%d", &age);
 
-void trimNewline(char *str)
-{
-    size_t len = strlen(str);
-    if (len > 0 && str[len - 1] == '\n')
-        str[len - 1] = '\0';
-}
 
-void trimSpaces(char *str)
-{
-    char *start = str;
-    while (*start == ' ' || *start == '\t')
-        start++;
-    char *end = start + strlen(start) - 1;
-    while (end > start && (*end == ' ' || *end == '\t'))
-        *end-- = '\0';
-    memmove(str, start, strlen(start) + 1);
-}
-
-int main(void)
-{
-    FILE *fp = fopen("DATA", "a+"); // Append mode, evvelki datani silmir. (w+ silir)
-    if (!fp)
+    if (selection == 0)
     {
-        perror("fopen failed:");
-        return 1;
+        snprintf(toWrite, sizeof(toWrite), "%s:%s:%d", name, surname, age);
+        writeNew(toWrite);
     }
 
-    char *prompts[] = {"Add user", "Delete user", "List user", "Update user", "\nQuit", NULL};
-    int selection = 0;
 
-    while (1)
-    {
-        printf("\033[H\033[J");
-        printf("Welcome to the student manager. What do you want to do?\n\n");
-        for (int i = 0; i < size(prompts); i++)
-        {
-            printf("%s%s\n", prompts[i], (selection == i) ? " <" : "");
-        }
-
-        char ch = _getch();
-        if (ch == 's' || ch == 'S' && selection < size(prompts) - 1)
-            selection++;
-        else if (ch == 'w' || ch == 'W' && selection > 0)
-            selection--;
-        else if (ch == '\r')
-            break;
-    }
-
-    if (selection == 0) // Add User
-    {
-        int newLine = getLineCount() + 1;
-        printf("\033[H\033[J-- ADD USER --\n\n");
-        char *AddUser[] = {"Name", "Surname", "Age", "Group", NULL};
-        char userInput[4][256]; // 4 input
-
-        for (int i = 0; i < 4; i++)
-        {
-            while (1)
-            {
-                printf("%s: ", AddUser[i]);
-                if (!fgets(userInput[i], sizeof(userInput[i]), stdin))
-                {
-                    printf("Input error. Try again.\n");
-                    continue;
-                }
-
-                trimNewline(userInput[i]);
-                trimSpaces(userInput[i]);
-
-                if (strlen(userInput[i]) == 0)
-                {
-                    printf("Input cannot be empty. Please enter %s.\n", AddUser[i]);
-                    continue;
-                }
-                break;
-            }
-
-            fprintf(fp, "%s;", userInput[i]);
-        }
-
-        fprintf(fp, "\n"); // line sonu
-        fflush(fp);
-
-        char *written = lineContent(newLine);
-        if (written)
-        {
-            size_t sep = strcspn(written, ";");
-            printf("\n\nSaved User: %.*s\n", (int)sep, written);
-            free(written);
-        }
-        else
-        {
-            printf("Failed to read saved user.\n");
-        }
-    }
-
-    if (selection == 1) // Delete user
-    {
-        printf("\033[H\033[J-- DELETE USER --\n\n");
-        char username[256];
-
-        while (1)
-        {
-            printf("Enter Username: ");
-            if (!fgets(username, sizeof(username), stdin))
-            {
-                printf("\nExiting..\n"); // eof ctrl+d
-                break;
-            }
-
-            trimNewline(username);
-            trimSpaces(username);
-
-            if (strlen(username) == 0)
-            {
-                printf("Username cannot be empty.\n");
-                continue;
-            }
-
-            FILE *fp = fopen("DATA", "r");
-            if (!fp)
-            {
-                perror("fopen failed");
-                break;
-            }
-
-            FILE *temp = fopen("DATA.tmp", "w");
-            if (!temp)
-            {
-                perror("fopen temp failed");
-                fclose(fp);
-                break;
-            }
-
-            char buffer[1024];
-            int found = 0;
-
-            while (fgets(buffer, sizeof(buffer), fp) != NULL)
-            {
-                char lineCopy[1024];
-                strcpy(lineCopy, buffer);
-                char *firstField = strtok(lineCopy, ";");
-                if (firstField && strcmp(firstField, username) == 0)
-                {
-                    found = 1; // skip this line
-                }
-                else
-                {
-                    fputs(buffer, temp);
-                }
-            }
-
-            fclose(fp);
-            fclose(temp);
-
-            if (!found)
-            {
-                printf("Username '%s' does not exist. Try again.\n", username);
-                remove("DATA.tmp");
-                continue;
-            }
-            else
-            {
-                remove("DATA");
-                rename("DATA.tmp", "DATA");
-                printf("User '%s' deleted successfully.\n", username);
-                break;
-            }
-        }
-    }
-
-    if (selection == 2) // List users
-    {
-        printf("\033[H\033[J-- LIST USERS --\n\n");
-
-        FILE *fp = fopen("DATA", "r");
-        if (!fp)
-        {
-            perror("fopen failed");
-        }
-        else
-        {
-            char buffer[1024];
-            int count = 0;
-
-            while (fgets(buffer, sizeof(buffer), fp) != NULL)
-            {
-                char lineCopy[1024];
-                strcpy(lineCopy, buffer);
-                char *username = strtok(lineCopy, ";");
-                if (username)
-                {
-                    count++;
-                    printf("%d. %s\n", count, username);
-                }
-            }
-
-            if (count == 0)
-            {
-                printf("No users found.\n");
-            }
-
-            fclose(fp);
-        }
-
-        printf("\nPress Enter to exit..");
-        getchar(); // wait for Enter
-    }
-
-    if (selection == 3) // Update user
-    {
-        printf("\033[H\033[J-- UPDATE USER --\n\n");
-
-        char username[256];
-        while (1)
-        {
-            printf("Enter Username to update: ");
-            if (!fgets(username, sizeof(username), stdin))
-            {
-                printf("\nExiting update menu.\n");
-                break;
-            }
-
-            trimNewline(username);
-            trimSpaces(username);
-
-            if (strlen(username) == 0)
-            {
-                printf("Username cannot be empty.\n");
-                continue;
-            }
-
-            FILE *fp = fopen("DATA", "r");
-            if (!fp)
-            {
-                perror("fopen failed");
-                break;
-            }
-
-            FILE *temp = fopen("DATA.tmp", "w");
-            if (!temp)
-            {
-                perror("fopen temp failed");
-                fclose(fp);
-                break;
-            }
-
-            char buffer[1024];
-            int found = 0;
-
-            while (fgets(buffer, sizeof(buffer), fp) != NULL)
-            {
-                char lineCopy[1024];
-                strcpy(lineCopy, buffer);
-                char *firstField = strtok(lineCopy, ";");
-
-                if (firstField && strcmp(firstField, username) == 0)
-                {
-                    found = 1;
-
-                    char newValues[4][256]; // Name, Surname, Age, Group
-                    char *AddUser[] = {"Name", "Surname", "Age", "Group", NULL};
-
-                    for (int i = 0; i < 4; i++)
-                    {
-                        while (1)
-                        {
-                            printf("%s: ", AddUser[i]);
-                            if (!fgets(newValues[i], sizeof(newValues[i]), stdin))
-                            {
-                                printf("\nInput error. Try again.\n");
-                                continue;
-                            }
-                            trimNewline(newValues[i]);
-                            trimSpaces(newValues[i]);
-                            if (strlen(newValues[i]) == 0)
-                                printf("Input cannot be empty. Please enter %s.\n", AddUser[i]);
-                            else
-                                break;
-                        }
-                    }
-
-                    fprintf(temp, "%s;%s;%s;%s;\n",
-                            newValues[0], newValues[1], newValues[2], newValues[3]);
-                }
-                else
-                {
-                    fputs(buffer, temp);
-                }
-            }
-
-            fclose(fp);
-            fclose(temp);
-
-            if (!found)
-            {
-                printf("Username '%s' does not exist. Try again.\n", username);
-                remove("DATA.tmp");
-                continue;
-            }
-            else
-            {
-                remove("DATA");
-                rename("DATA.tmp", "DATA");
-                printf("User '%s' updated successfully.\n", username);
-                break;
-            }
-        }
-    }
-
-    fclose(fp);
-    return 0;
 }
