@@ -1,57 +1,42 @@
-## Student Manager
+# Student Manager
 
-### How does it work?
-- All user data is stored in a file named `DATA` (no extension).  
-Each line in the file represents a single user.  
-Each line has fields separated by semicolons (`;`) in this order:  
-
-- When the program starts, it presents a terminal menu to **Add, Delete, List, or Update users**.  
-Inputs are validated: empty or whitespace-only inputs are rejected.  
+A simple C program to manage a list of students stored in a plain text file (`DATA`).  
+It allows you to **add**, **delete**, **update**, and **list** students.
 
 ---
 
-### Usage
+## How It Works
 
-#### 1. Add User
-- Select `Add user` from the menu.  
-You will be prompted to enter:
-- Name  
-- Surname  
-- Age  
-- Group  
-All fields must be filled.  
-The new user is appended to the `DATA` file.  
+- All student data is stored in a file called `DATA` in the format:
 
-#### 2. Delete User
-- Select `Delete user`.  
-- Enter the **username** (first field, `Name`) you want to delete.  
-- If the username does not exist, the program will ask again.  
-- Press **Ctrl+D** (EOF) to exit the delete menu without deleting.  
+NAME:SURNAME:AGE
 
-#### 3. List Users
-- Select `List user`.  
-- All usernames stored in the file are printed with a numbered list.  
-- Press **Enter** to return to the main menu.  
 
-#### 4. Update User
-- Select `Update user`.  
-- Enter the **username** to update.  
-- You will be prompted for new values for:
-- Name  
-- Surname  
-- Age  
-- Group  
-- Empty inputs are not allowed.  
-- Press **Ctrl+D** to exit the update menu.  
-- The existing line in `DATA` is replaced with the new values.  
+- Each operation works by reading the `DATA` file, modifying it in memory or a temporary file, and then rewriting the updated data back to `DATA`.
 
-#### 5. Quit
-- Select `Quit` to exit the program.  
+- Functions:
+
+  - `writeNew(const char *toWrite)`: Adds a new student at the end of the file.  
+  - `findUser(char *name)`: Returns the line number of a student by name, or `-1` if not found.  
+  - `deleteUser(int lineToDelete)`: Deletes a student by line number.  
+  - `updateUser(int lineToUpdate, char* newLine)`: Updates a student’s details on a specific line.  
+  - `listUser()`: Prints all student names with numbering.
+
+- The program uses ANSI escape codes (`cls`) to clear the screen before showing menus.
 
 ---
 
-### Notes / Tips
-- The program uses **terminal input** and ANSI escape codes (`\033[H\033[J`) to clear the screen.  
-- Usernames are considered **case-sensitive** when deleting or updating.  
-- Each user is stored on a separate line, so you can manually inspect the `DATA` file if needed.  
-- Input validation ensures no empty fields are written to the file.  
+## Usage
+
+1. Compile the program:
+
+```bash
+gcc student_manager.c -o student_manager
+./student_manager
+```
+## Available commands
+1. Add User
+2. Delete User
+3. Update User
+4. List all
+5. Quit
