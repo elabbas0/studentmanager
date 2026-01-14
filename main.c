@@ -143,7 +143,7 @@ int main()
         return 0;
     }
     if (selection == 4) { return 0;}
-    printf(selection == 1 ? " -- %s --\n\n1. Name (Case sensitive): ":" -- %s --\n\n1. Name: ", arr[selection]);
+    printf(selection == 1 ? "\n -- %s --\n\n1. Name (Case sensitive): ":" -- %s --\n\n1. Name: ", arr[selection]);
     scanf("%255s", name);
    
     if(selection == 1){ //Delete user
@@ -156,7 +156,7 @@ int main()
     if(selection == 2){ //Update user
         if(findUser(name) == -1){printf("No such user found."); return 1;}
 
-        printf(cls); printf(" -- Update User --\n\n1. Name: "); scanf("%s255",&name);
+        printf(cls); printf("\n -- Update User --\n\n1. Name: "); scanf("%s255",&name);
         printf("2. Surname: "); scanf("%s255",&surname);
         printf("3. Age: "); scanf("%d",&age);
 
@@ -182,3 +182,4 @@ int main()
 
 
 }
+
