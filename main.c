@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define cls "\033[1;1H\033[2J" // i dont wanna keep rewriting it, escape code for ascii which clears the screen
+#define cls "\033[1;1H\033[2J" // clears the terminal on linux, won't work on windows if virtual terminal is not enabled
 
 void writeNew(const char *toWrite)
 {
@@ -182,4 +182,5 @@ int main()
 
 
 }
+
 
